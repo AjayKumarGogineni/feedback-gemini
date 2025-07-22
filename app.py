@@ -32,9 +32,9 @@ CATEGORIES = [
     "Lipsync", "Fitness & Health", "Society"
 ]
 
-
+# st.write("Secrets:", st.secrets)
 GOOGLE_APPS_SCRIPT_URL = st.secrets["GOOGLE_APPS_SCRIPT_URL"]
-models_str = st.secrets["LLM_MODELS"]
+models = st.secrets["LLM_MODELS"]
 
 # models_str = os.getenv("LLM_MODELS", "")
 # model_idx = int(os.getenv("MODEL_IDX", 0))
