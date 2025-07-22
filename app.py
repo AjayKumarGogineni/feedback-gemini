@@ -32,11 +32,17 @@ CATEGORIES = [
     "Lipsync", "Fitness & Health", "Society"
 ]
 
-# LLM Model (hardcoded for now)
-LLM_MODELS = os.getenv("LLM_MODELS", "gemini,internvl,qwenvl").split(",")
-
-MODEL_IDX = int(os.getenv("MODEL_IDX", 0))  # Default to 0 if not set
+models_str = os.getenv("LLM_MODELS", "")
+model_idx = int(os.getenv("MODEL_IDX", 0))
+# Convert string to list
+LLM_MODELS = [m.strip() for m in models_str.split(",") if m.strip()]
+if not LLM_MODELS:
+    st.error("No LLM models configured. Please check your .env file.")
+    st.stop()
 LLM_MODEL = LLM_MODELS[model_idx]
+print(f"Using LLM Model: {LLM_MODEL}")
+# LLM Model (hardcoded for now)
+# LLM_MODELS = os.getenv("LLM_MODELS", "gemini,internvl,qwenvl").split(",")
 
 csv_path_dict = {
     "gemini": "gemini.csv",
@@ -49,7 +55,7 @@ with open("data/video_name_to_id.json", "r") as f:
     video_name_to_id = json.load(f)
 
 VIDEO_SAMPLE_SIZE = int(os.getenv("VIDEO_SAMPLE_SIZE", 50))  # Default to 50 if not set
-LOAD_RAMDOM = os.getenv("LOAD_RAMDOM", "False").lower() == "true
+LOAD_RAMDOM = os.getenv("LOAD_RAMDOM", "False").lower() == "true"
 
 
 def load_video_data(video_list_file):
