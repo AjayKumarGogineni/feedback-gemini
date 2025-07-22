@@ -33,10 +33,11 @@ CATEGORIES = [
 ]
 
 # LLM Model (hardcoded for now)
-LLM_MODELS = ["gemini", "internvl", "qwenvl"]
+LLM_MODELS = os.getenv("LLM_MODELS", "gemini,internvl,qwenvl").split(",")
 
-model_idx = 0
+MODEL_IDX = int(os.getenv("MODEL_IDX", 0))  # Default to 0 if not set
 LLM_MODEL = LLM_MODELS[model_idx]
+
 csv_path_dict = {
     "gemini": "gemini.csv",
     "internvl": "internvl.csv",
@@ -47,8 +48,8 @@ file_name = csv_path_dict[LLM_MODEL]
 with open("data/video_name_to_id.json", "r") as f:
     video_name_to_id = json.load(f)
 
-VIDEO_SAMPLE_SIZE = 50
-LOAD_RAMDOM = False
+VIDEO_SAMPLE_SIZE = int(os.getenv("VIDEO_SAMPLE_SIZE", 50))  # Default to 50 if not set
+LOAD_RAMDOM = os.getenv("LOAD_RAMDOM", "False").lower() == "true
 
 
 def load_video_data(video_list_file):
