@@ -20,7 +20,7 @@ st.set_page_config(
 )
 
 # Your Google Apps Script Web App URL
-GOOGLE_APPS_SCRIPT_URL = os.getenv("GOOGLE_APPS_SCRIPT_URL")
+# GOOGLE_APPS_SCRIPT_URL = os.getenv("GOOGLE_APPS_SCRIPT_URL")
 
 # Categories for video classification
 CATEGORIES = [
@@ -32,15 +32,28 @@ CATEGORIES = [
     "Lipsync", "Fitness & Health", "Society"
 ]
 
-models_str = os.getenv("LLM_MODELS", "")
-model_idx = int(os.getenv("MODEL_IDX", 0))
-# Convert string to list
-LLM_MODELS = [m.strip() for m in models_str.split(",") if m.strip()]
-if not LLM_MODELS:
-    st.error("No LLM models configured. Please check your .env file.")
-    st.stop()
-LLM_MODEL = LLM_MODELS[model_idx]
-print(f"Using LLM Model: {LLM_MODEL}")
+
+GOOGLE_APPS_SCRIPT_URL = st.secrets["GOOGLE_APPS_SCRIPT_URL"]
+models_str = st.secrets["LLM_MODELS"]
+
+# models_str = os.getenv("LLM_MODELS", "")
+# model_idx = int(os.getenv("MODEL_IDX", 0))
+model_idx = int(st.secrets["MODEL_IDX"])
+if isinstance(models, str):
+    models = models.split(",")
+else:
+    st.error("LLM_MODELS should be a comma-separated string in secrets.toml or .env file.")
+
+LLM_MODEL = models[model_idx]
+
+
+# # Convert string to list
+# LLM_MODELS = [m.strip() for m in models_str.split(",") if m.strip()]
+# if not LLM_MODELS:
+#     st.error("No LLM models configured. Please check your .env file.")
+#     st.stop()
+# LLM_MODEL = LLM_MODELS[model_idx]
+# print(f"Using LLM Model: {LLM_MODEL}")
 # LLM Model (hardcoded for now)
 # LLM_MODELS = os.getenv("LLM_MODELS", "gemini,internvl,qwenvl").split(",")
 
