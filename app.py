@@ -385,6 +385,7 @@ def survey_page():
         
         # Feedback form
         st.subheader("📝 Your Feedback")
+        st.markdown("Instructions: Watch video → Read AI summary → Rate accuracy → Categorize content → Provide detailed feedback")
         st.markdown("**Note:** All fields marked with * are mandatory.")
         
         # Form fields outside of st.form for real-time validation
