@@ -429,14 +429,15 @@ def survey_page():
             height=100,
             help="This field is mandatory. Please explain your ratings.",
             key=f"comments_{current_idx}"
+            # key=f"comments"
         )
         
         # Check if all required fields are filled - simplified comments check
         all_fields_filled = (
             rating is not None and 
             accuracy is not None and 
-            predicted_category and predicted_category != "" and
-            comments.strip() != ""  # Simplified: just check if non-empty after stripping whitespace
+            predicted_category and predicted_category != ""
+            # and comments.strip() != ""  # Simplified: just check if non-empty after stripping whitespace
         )
         
         # Show validation messages in real-time
