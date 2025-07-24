@@ -15,7 +15,7 @@ load_dotenv()
 # Page config
 st.set_page_config(
     page_title="Video Summary Feedback Tool",
-    page_icon="🎥",
+    page_icon="🎓",
     layout="wide"
 )
 
@@ -67,8 +67,10 @@ file_name = csv_path_dict[LLM_MODEL]
 with open("data/video_name_to_id.json", "r") as f:
     video_name_to_id = json.load(f)
 
-VIDEO_SAMPLE_SIZE = int(os.getenv("VIDEO_SAMPLE_SIZE", 50))  # Default to 50 if not set
-LOAD_RAMDOM = os.getenv("LOAD_RAMDOM", "False").lower() == "true"
+VIDEO_SAMPLE_SIZE = st.secrets["VIDEO_SAMPLE_SIZE"]
+LOAD_RAMDOM = st.secrets["LOAD_RAMDOM"]
+# int(os.getenv("VIDEO_SAMPLE_SIZE", 50))  # Default to 50 if not set
+# LOAD_RAMDOM = os.getenv("LOAD_RAMDOM", "False").lower() == "true"
 
 
 def load_video_data(video_list_file):
@@ -219,40 +221,96 @@ if 'submission_complete' not in st.session_state:
     st.session_state.submission_complete = False
 
 def intro_page():
-    """Introduction and consent page - Made more compact"""
-    st.title("🎥 Video Summary Feedback Study")
-    st.markdown("**Max Planck Institute for Informatics**")
+    """Introduction and consent page"""
+    # Research Study Header with Logo
+    st.markdown("""
+    <div style="text-align: center; padding: 15px 0;">
+        <div style="font-size: 3em; margin-bottom: 8px;">🎓</div>
+        <h1 style="color: #1f4e79; margin: 0; font-size: 2.2em;">Video Summary Feedback Study</h1>
+        <p style="color: #666; margin: 3px 0; font-size: 1em;">Max Planck Institute for Software Systems • Germany</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
     
     st.markdown("""
-    ## Study Overview
-    
-    Help us improve AI-generated video summaries by watching short videos and rating their summaries.
-    
-    **What you'll do:** Watch videos → Read AI summaries → Rate accuracy → Categorize content
-    
-    **Time:** ~10-15 minutes total
-    
-    **Privacy:** Anonymous responses, research use only, withdraw anytime
+    ### Welcome to Our Research Study
+
+    Dear participant,
+
+    This survey aims to understand the efficacy of multimodal language models in summarizing short-format videos. During the survey, you will be properly guided through different sections. We will record your responses given during the survey.
+
+    This study is being conducted by academic researchers from the Max Planck Institute for Software Systems, Germany. Your valuable opinion expressed in this survey may contribute to important research findings. We request you to read the instructions carefully and answer all questions thoughtfully.
+
+    **Privacy & Data Protection:**
+    - Results may be published in research forums, but only in aggregate forms (averages, totals)
+    - No personal information will be published or shared
+    - All information will be protected to the greatest extent allowed by law
+    - Data will be kept secured during and after the survey
+
+    **Your Rights:**
+    - Participation is completely voluntary
+    - You may withdraw at any time without penalty
+    - Your responses will remain anonymous
+    - You can request data deletion by contacting the researchers
     """)
+    
+    st.markdown("---")
+    st.markdown("**Note:** All fields marked with * are mandatory.")
     
     # Compact layout for ID and consent
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.subheader("👤 Participant ID")
+        st.subheader("👤 Participant Information")
         prolific_id = st.text_input("Prolific ID*", 
-                                   placeholder="Enter your Prolific ID")
+                                   placeholder="Enter your Prolific ID",
+                                   help="Please enter your complete Prolific ID (typically 24 characters)")
+        
+        # Validate Prolific ID
+        prolific_id_valid = False
+        if prolific_id:
+            if len(prolific_id) < 10:
+                st.error("⚠️ Prolific ID seems too short. Please ensure you entered the complete ID.")
+            elif len(prolific_id) > 30:
+                st.error("⚠️ Prolific ID seems too long. Please check your entry.")
+            elif not prolific_id.replace('-', '').replace('_', '').isalnum():
+                st.error("⚠️ Prolific ID should contain only letters, numbers, hyphens, and underscores.")
+            else:
+                prolific_id_valid = True
+                st.success("✅ Prolific ID format looks correct.")
     
     with col2:
-        st.subheader("📋 Consent")
-        consent = st.checkbox("""
-        I consent to participate in this research study. 
-        I understand my participation is voluntary, 
-        responses are anonymous, and I can withdraw anytime.
-        """)
+        st.subheader("📋 Informed Consent")
+        
+        # Clear consent checkbox with better formatting
+        consent = st.checkbox(
+            label="**I provide my informed consent to participate***",
+            value=False,
+            help="Check this box to indicate your agreement to participate"
+        )
+        
+        if consent:
+            st.markdown("""
+            <div style="background-color: #e8f5e8; padding: 10px; border-radius: 5px; border-left: 4px solid #4CAF50; color: #2e7d32;">
+                <strong>✅ Consent Acknowledged</strong><br>
+                <span style="color: #2e7d32;">By checking this box, you confirm that you:</span>
+                <ul style="margin: 5px 0; color: #2e7d32;">
+                    <li>Have read and understood the study information</li>
+                    <li>Voluntarily agree to participate in this research</li>
+                    <li>Understand your participation is voluntary and anonymous</li>
+                    <li>Know you can withdraw at any time</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
     
-    if st.button("🚀 Begin Study", disabled=not (prolific_id and consent), type="primary"):
-        if prolific_id and consent:
+    # Enable button only when all conditions are met
+    can_proceed = prolific_id and prolific_id_valid and consent
+    
+    st.markdown("---")
+    
+    if st.button("🚀 Begin Study", disabled=not can_proceed, type="primary", use_container_width=True):
+        if can_proceed:
             st.session_state.prolific_id = prolific_id
             st.session_state.consent_given = True
             
@@ -270,7 +328,12 @@ def intro_page():
             else:
                 st.error("No videos found. Please contact the researchers.")
         else:
-            st.error("Please enter your Prolific ID and provide consent to continue.")
+            if not prolific_id:
+                st.error("⚠️ Please enter your Prolific ID.")
+            elif not prolific_id_valid:
+                st.error("⚠️ Please enter a valid Prolific ID.")
+            elif not consent:
+                st.error("⚠️ Please provide your informed consent to continue.")
 
 def survey_page():
     """Main survey page with video feedback"""
@@ -322,90 +385,121 @@ def survey_page():
         
         # Feedback form
         st.subheader("📝 Your Feedback")
+        st.markdown("**Note:** All fields marked with * are mandatory.")
         
-        with st.form("feedback_form"):
-            # Overall Rating
-            st.markdown("📊 **Overall Rating***:")
-            rating = st.radio(
-                "Rate the overall quality of the video summary",
-                options=[1, 2, 3, 4, 5],
-                format_func=lambda x: f"{['Very Poor', 'Poor', 'Ok', 'Good', 'Very Good'][x-1]}",
-                index=2,
-                horizontal=True,
-                label_visibility="collapsed"
-            )
-            
-            # Summary Accuracy
-            st.markdown("🎯 **Summary Accuracy***:")
-            accuracy = st.radio(
-                "Rate the accuracy of the video summary",
-                options=[1, 2, 3, 4, 5],
-                format_func=lambda x: f"{['Very Bad', 'Bad', 'Moderate', 'Good', 'Very Good'][x-1]}",
-                index=2,
-                horizontal=True,
-                label_visibility="collapsed"
-            )
+        # Form fields outside of st.form for real-time validation
+        st.markdown("📊 **Overall Rating***:")
+        rating = st.radio(
+            "Rate the overall quality of the video summary",
+            options=[1, 2, 3, 4, 5],
+            format_func=lambda x: f"{x} - {['Very Poor', 'Poor', 'Ok', 'Good', 'Very Good'][x-1]}",
+            index=2,
+            horizontal=True,
+            label_visibility="collapsed",
+            key=f"rating_{current_idx}"
+        )
+        
+        # Summary Accuracy
+        st.markdown("🎯 **Summary Accuracy***:")
+        accuracy = st.radio(
+            "Rate the accuracy of the video summary",
+            options=[1, 2, 3, 4, 5],
+            format_func=lambda x: f"{x} - {['Very Bad', 'Bad', 'Moderate', 'Good', 'Very Good'][x-1]}",
+            index=2,
+            horizontal=True,
+            label_visibility="collapsed",
+            key=f"accuracy_{current_idx}"
+        )
 
-            # Video Category Selection
-            st.markdown("📂 **Video Category***:")
-            predicted_category = st.selectbox(
-                "What category best describes this video?",
-                options=[""] + CATEGORIES,
-                index=0,
-                help="Select the most appropriate category for this video content",
-                label_visibility="collapsed"
-            )
+        # Video Category Selection
+        st.markdown("📂 **Video Category***:")
+        predicted_category = st.selectbox(
+            "What category best describes this video?",
+            options=[""] + CATEGORIES,
+            index=0,
+            help="Select the most appropriate category for this video content",
+            label_visibility="collapsed",
+            key=f"category_{current_idx}"
+        )
+        
+        # Detailed Feedback
+        comments = st.text_area(
+            "💬 **Detailed Feedback***:",
+            placeholder="Briefly explain your rating and summary accuracy scores you provided. What was accurate/inaccurate? What was missing?",
+            height=100,
+            help="This field is mandatory. Please explain your ratings.",
+            key=f"comments_{current_idx}"
+        )
+        
+        # Check if all required fields are filled - simplified comments check
+        all_fields_filled = (
+            rating is not None and 
+            accuracy is not None and 
+            predicted_category and predicted_category != "" and
+            comments.strip() != ""  # Simplified: just check if non-empty after stripping whitespace
+        )
+        
+        # Show validation messages in real-time
+        if not all_fields_filled:
+            missing_fields = []
+            if not comments.strip():
+                missing_fields.append("Detailed feedback")
+            if not predicted_category or predicted_category == "":
+                missing_fields.append("Video category")
             
-            # Detailed Feedback
-            comments = st.text_area(
-                "💬 Detailed Feedback*:",
-                placeholder="Briefly explain your rating and summary accuracy scores you provided. What was accurate/inaccurate? What was missing?",
-                height=100,
-                help="This field is mandatory. Please explain your ratings."
-            )
-            
-            # Form validation and submission
-            if current_idx < total_videos - 1:
-                submitted = st.form_submit_button("➡️ Next Video", type="primary")
-            else:
-                submitted = st.form_submit_button("✅ Submit & Complete Study", type="primary")
-            
-            if submitted:
-                # Validation
-                if not comments.strip():
-                    st.error("⚠️ Detailed feedback is mandatory. Please provide your explanation.")
-                elif not predicted_category:
-                    st.error("⚠️ Please select a video category.")
+            if missing_fields:
+                st.warning(f"⚠️ Please complete: {', '.join(missing_fields)}")
+        
+        # Determine button text and action based on video position
+        is_last_video = current_idx >= total_videos - 1
+        
+        if is_last_video:
+            button_text = "✅ Submit & Complete Study"
+            button_help = "Submit your feedback and complete the study"
+        else:
+            button_text = "➡️ Next Video"
+            button_help = f"Continue to video {current_idx + 2} of {total_videos}"
+        
+        # Action button
+        if st.button(
+            button_text,
+            type="primary" if all_fields_filled else "secondary",
+            disabled=not all_fields_filled,
+            help=button_help,
+            use_container_width=True,
+            key=f"submit_btn_{current_idx}"
+        ):
+            if all_fields_filled:
+                # Calculate time spent on this video
+                time_spent = time.time() - st.session_state.video_start_time if st.session_state.video_start_time else 0
+                
+                # Prepare feedback data with consistent ordering
+                feedback_data = {
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'prolific_id': st.session_state.prolific_id,
+                    'session_id': st.session_state.session_id,
+                    'video_name': current_video['name'],
+                    'rating': rating,
+                    'accuracy': accuracy,
+                    'predicted_category': predicted_category,
+                    'true_category': current_video['true_category'],
+                    'comments': comments,
+                    'llm_model': LLM_MODEL,
+                    'time_spent': round(time_spent, 2)
+                }
+                
+                # Add to session state
+                st.session_state.feedback_data.append(feedback_data)
+                
+                # Move to next video or finish
+                if is_last_video:
+                    # This is the last video, proceed to submit all data
+                    submit_all_data()
                 else:
-                    # Calculate time spent on this video
-                    time_spent = time.time() - st.session_state.video_start_time if st.session_state.video_start_time else 0
-                    
-                    # Prepare feedback data with consistent ordering
-                    feedback_data = {
-                        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        'prolific_id': st.session_state.prolific_id,
-                        'session_id': st.session_state.session_id,
-                        'video_name': current_video['name'],
-                        'rating': rating,
-                        'accuracy': accuracy,
-                        'predicted_category': predicted_category,
-                        'true_category': current_video['true_category'],
-                        'comments': comments,
-                        'llm_model': LLM_MODEL,
-                        'time_spent': round(time_spent, 2)
-                    }
-                    
-                    # Add to session state
-                    st.session_state.feedback_data.append(feedback_data)
-                    
-                    # Move to next video or finish and submit
-                    if current_idx < total_videos - 1:
-                        st.session_state.current_video_index += 1
-                        st.session_state.video_start_time = time.time()  # Reset timer for next video
-                        st.rerun()
-                    else:
-                        # This is the last video, proceed to submit all data
-                        submit_all_data()
+                    # Move to next video
+                    st.session_state.current_video_index += 1
+                    st.session_state.video_start_time = time.time()  # Reset timer for next video
+                    st.rerun()
 
 def submit_all_data():
     """Submit all collected data to Google Sheets"""
@@ -451,9 +545,14 @@ def submit_all_data():
     st.rerun()
 
 def summary_page():
-    """Final summary page - no additional submit button"""
-    st.title("🎉 Study Complete!")
-    st.markdown("Thank you for your participation in the Video Summary Feedback Study.")
+    """Final summary page"""
+    st.markdown("""
+    <div style="text-align: center; padding: 20px 0;">
+        <div style="font-size: 4em; margin-bottom: 10px;">🎉</div>
+        <h1 style="color: #1f4e79; margin: 0;">Study Complete!</h1>
+        <p style="color: #666; font-size: 1.2em;">Thank you for your participation in the Video Summary Feedback Study</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Show submission status
     if st.session_state.submission_complete:
