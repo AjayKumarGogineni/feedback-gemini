@@ -348,6 +348,16 @@ def survey_page():
     st.progress((current_idx + 1) / total_videos)
     st.write(f"Video {current_idx + 1} of {total_videos}")
     
+    # Prominent instructions at the top of the page
+    st.markdown("""
+    <div style="background-color: #e3f2fd; padding: 15px; border-radius: 10px; border-left: 5px solid #2196f3; margin-bottom: 20px;">
+        <h3 style="color: #1976d2; margin: 0 0 8px 0; font-size: 1.3em;">📋 Instructions</h3>
+        <p style="color: #424242; margin: 0; font-size: 1.1em; font-weight: 500;">
+            Watch the video → Read the AI summary → Rate the summary quality → Rate the summary accuracy → Categorize the video content → Provide detailed feedback
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
     current_video = st.session_state.videos[current_idx]
     
     # Initialize video start time if not set
@@ -385,28 +395,27 @@ def survey_page():
         
         # Feedback form
         st.subheader("📝 Your Feedback")
-        st.markdown("Instructions: Watch video → Read AI summary → Rate accuracy → Categorize content → Provide detailed feedback")
         st.markdown("**Note:** All fields marked with * are mandatory.")
         
         # Form fields outside of st.form for real-time validation
-        st.markdown("📊 **Overall Rating***:")
+        st.markdown("📊 **How do you rate the above-written summary of the video?***")
         rating = st.radio(
-            "Rate the overall quality of the video summary",
+            "Overall quality rating",
             options=[1, 2, 3, 4, 5],
-            format_func=lambda x: f"{x} - {['Very Poor', 'Poor', 'Ok', 'Good', 'Very Good'][x-1]}",
-            index=2,
+            format_func=lambda x: f"{x} - {['Very Poor', 'Poor', 'Fair', 'Good', 'Very Good'][x-1]}",
+            index=None,
             horizontal=True,
             label_visibility="collapsed",
             key=f"rating_{current_idx}"
         )
         
         # Summary Accuracy
-        st.markdown("🎯 **Summary Accuracy***:")
+        st.markdown("🎯 **How accurate is the above-written summary of the video? Please feel free to rewatch the video if you need.***")
         accuracy = st.radio(
-            "Rate the accuracy of the video summary",
+            "Summary accuracy rating",
             options=[1, 2, 3, 4, 5],
-            format_func=lambda x: f"{x} - {['Very Bad', 'Bad', 'Moderate', 'Good', 'Very Good'][x-1]}",
-            index=2,
+            format_func=lambda x: f"{x} - {['Very Poor', 'Poor', 'Fair', 'Good', 'Very Good'][x-1]}",
+            index=None,
             horizontal=True,
             label_visibility="collapsed",
             key=f"accuracy_{current_idx}"
@@ -430,24 +439,27 @@ def survey_page():
             height=100,
             help="This field is mandatory. Please explain your ratings.",
             key=f"comments_{current_idx}"
-            # key=f"comments"
         )
         
-        # Check if all required fields are filled - simplified comments check
+        # Check if all required fields are filled
         all_fields_filled = (
             rating is not None and 
             accuracy is not None and 
             predicted_category and predicted_category != ""
-            # and comments.strip() != ""  # Simplified: just check if non-empty after stripping whitespace
+            # and comments.strip() != ""
         )
         
         # Show validation messages in real-time
         if not all_fields_filled:
             missing_fields = []
-            if not comments.strip():
-                missing_fields.append("Detailed feedback")
+            if rating is None:
+                missing_fields.append("Overall rating")
+            if accuracy is None:
+                missing_fields.append("Summary accuracy")
             if not predicted_category or predicted_category == "":
                 missing_fields.append("Video category")
+            if not comments.strip():
+                missing_fields.append("Detailed feedback")
             
             if missing_fields:
                 st.warning(f"⚠️ Please complete: {', '.join(missing_fields)}")
