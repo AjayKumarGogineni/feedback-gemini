@@ -353,7 +353,7 @@ def survey_page():
     <div style="background-color: #e3f2fd; padding: 15px; border-radius: 10px; border-left: 5px solid #2196f3; margin-bottom: 20px;">
         <h3 style="color: #1976d2; margin: 0 0 8px 0; font-size: 1.3em;">📋 Instructions</h3>
         <p style="color: #424242; margin: 0; font-size: 1.1em; font-weight: 500;">
-            Watch the video → Read the AI summary → Rate the summary quality → Rate the summary accuracy → Categorize the video content → Provide detailed feedback
+            Watch the video → Read the AI summary → Rate the summary quality → Categorize the video content → Provide detailed feedback
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -409,17 +409,19 @@ def survey_page():
             key=f"rating_{current_idx}"
         )
         
-        # Summary Accuracy
-        st.markdown("🎯 **How accurate is the above-written summary of the video? Please feel free to rewatch the video if you need.***")
-        accuracy = st.radio(
-            "Summary accuracy rating",
-            options=[1, 2, 3, 4, 5],
-            format_func=lambda x: f"{x} - {['Very Poor', 'Poor', 'Fair', 'Good', 'Very Good'][x-1]}",
-            index=None,
-            horizontal=True,
-            label_visibility="collapsed",
-            key=f"accuracy_{current_idx}"
-        )
+        # # Summary Accuracy
+        # st.markdown("🎯 **How accurate is the above-written summary of the video? Please feel free to rewatch the video if you need.***")
+        # accuracy = st.radio(
+        #     "Summary accuracy rating",
+        #     options=[1, 2, 3, 4, 5],
+        #     format_func=lambda x: f"{x} - {['Very Poor', 'Poor', 'Fair', 'Good', 'Very Good'][x-1]}",
+        #     index=None,
+        #     horizontal=True,
+        #     label_visibility="collapsed",
+        #     key=f"accuracy_{current_idx}"
+        # )
+
+        accuracy = None
 
         # Video Category Selection
         st.markdown("📂 **Video Category***:")
@@ -444,9 +446,9 @@ def survey_page():
         # Check if all required fields are filled
         all_fields_filled = (
             rating is not None and 
-            accuracy is not None and 
+            # accuracy is not None and 
             predicted_category and predicted_category != ""
-            # and comments.strip() != ""
+            and comments.strip() != ""
         )
         
         # Show validation messages in real-time
