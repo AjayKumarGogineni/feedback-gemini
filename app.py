@@ -315,7 +315,7 @@ def intro_page():
             st.session_state.consent_given = True
             
             # Load video data
-            video_list_file = "data/common_videos_list.txt"
+            video_list_file = "data/required_videos.txt"
             videos = load_video_data(video_list_file)
             
             if videos:
@@ -353,6 +353,7 @@ def survey_page():
     <div style="background-color: #e3f2fd; padding: 15px; border-radius: 10px; border-left: 5px solid #2196f3; margin-bottom: 20px;">
         <h3 style="color: #1976d2; margin: 0 0 8px 0; font-size: 1.3em;">📋 Instructions</h3>
         <p style="color: #424242; margin: 0; font-size: 1.1em; font-weight: 500;">
+            Your task is to evaluate the quality of the AI-generated summary on the right for the given short form video. Please follow these steps:
             Watch the video → Read the AI summary → Rate the summary quality → Categorize the video content → Provide detailed feedback
         </p>
     </div>
