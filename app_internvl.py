@@ -35,6 +35,7 @@ CATEGORIES = [
 # st.write("Secrets:", st.secrets)
 GOOGLE_APPS_SCRIPT_URL = st.secrets["GOOGLE_APPS_SCRIPT_URL"]
 models = st.secrets["LLM_MODELS"]
+PROLIFIC_COMPLETION_CODE = st.secrets["PROLIFIC_COMPLETION_CODE"]
 
 # models_str = os.getenv("LLM_MODELS", "")
 # model_idx = int(os.getenv("MODEL_IDX", 0))
@@ -574,53 +575,62 @@ def summary_page():
     # Show submission status
     if st.session_state.submission_complete:
         st.success("✅ Your responses have been successfully submitted!")
+        if st.session_state.feedback_data:
+            st.markdown("### ✅ Next Steps")
+            st.success(
+                f"""
+                Thank you for your responses!  
+                To complete the survey, please enter the following code on the Prolific website:  
+
+                **{PROLIFIC_COMPLETION_CODE}**
+                """
+            )
+
+            # Show summary of responses
+            st.subheader("📊 Response Summary")
+            df = pd.DataFrame(st.session_state.feedback_data)
+
+            # Key stats
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Videos Reviewed", len(df))
+            with col2:
+                avg_rating = df['rating'].mean()
+                st.metric("Avg. Rating", f"{avg_rating:.1f}/5")
+            with col3:
+                total_time = df['time_spent'].sum()
+                st.metric("Time Spent", f"{total_time:.0f}s")
+
+            st.markdown("---")
+            
+
+            # Optional details
+            with st.expander("📋 View All Responses"):
+                display_df = df[['video_name', 'rating', 'accuracy', 'predicted_category', 'comments']]
+                st.dataframe(display_df, use_container_width=True)
+
+            # Backup option
+            csv = df.to_csv(index=False)
+            st.download_button(
+                "📥 Download Responses",
+                data=csv,
+                file_name=f"feedback_backup_{st.session_state.prolific_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv"
+            )
     else:
         st.error("❌ There were issues submitting some responses.")
     
-    # Show summary of responses
-    st.subheader("📊 Your Response Summary")
-    if st.session_state.feedback_data:
-        df = pd.DataFrame(st.session_state.feedback_data)
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Videos Reviewed", len(df))
-        with col2:
-            avg_rating = df['rating'].mean()
-            st.metric("Average Rating", f"{avg_rating:.1f}/5")
-        with col3:
-            total_time = df['time_spent'].sum()
-            st.metric("Total Time", f"{total_time:.0f}s")
-        
-        # Show responses table
-        with st.expander("📋 View All Responses"):
-            display_df = df[['video_name', 'rating', 'accuracy', 'predicted_category', 'comments']]
-            st.dataframe(display_df, use_container_width=True)
-        
-        # Download backup option
-        csv = df.to_csv(index=False)
-        st.download_button(
-            "📥 Download Response Backup",
-            data=csv,
-            file_name=f"feedback_backup_{st.session_state.prolific_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            mime="text/csv",
-            help="Download your responses as a backup file"
-        )
     
-    st.markdown("---")
-    st.markdown("### 📝 Next Steps")
-    st.markdown("""
-    - You can now close this browser window
-    - Your participation is complete
-    - Thank you for contributing to AI research!
-    """)
+
     
-    # Optional: Reset study button for testing
-    if st.button("🔄 Start New Study Session", help="For testing purposes only"):
-        # Reset all session state
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
+    
+    
+    # # Optional: Reset study button for testing
+    # if st.button("🔄 Start New Study Session", help="For testing purposes only"):
+    #     # Reset all session state
+    #     for key in list(st.session_state.keys()):
+    #         del st.session_state[key]
+    #     st.rerun()
 
 def main():
     """Main application logic"""
