@@ -580,7 +580,7 @@ def summary_page():
             st.success(
                 f"""
                 Thank you for your responses!  
-                To complete the survey, please enter the following code on the Prolific website:  
+                To complete the survey, please enter the following code on the Prolific website:
 
                 **{PROLIFIC_COMPLETION_CODE}**
                 """
